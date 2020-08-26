@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:encrypt_plugin_example/pay/alipay_config.dart';
+import 'package:flutter/cupertino.dart';
 
 /**
  * 2.0 订单串本地签名逻辑
@@ -73,11 +74,23 @@ import 'package:encrypt_plugin_example/pay/alipay_config.dart';
 
 		keyValues.putIfAbsent("sign_type", ()=>rsa2 ? "RSA2" : "RSA");
 
-		keyValues.putIfAbsent("timestamp", ()=>"2020-08-03 16:32:53");
+		keyValues.putIfAbsent("timestamp", ()=>getTimestamp());
 
 		keyValues.putIfAbsent("version", ()=>"1.0");
 
 		return keyValues;
+	}
+
+	static String getTimestamp(){
+		DateTime dateTime = DateTime.now();
+		var m=dateTime.month<10?"0"+dateTime.month.toString():dateTime.month;
+		var d=dateTime.day<10?"0"+dateTime.day.toString():dateTime.day;
+		var h=dateTime.hour<10?"0"+dateTime.hour.toString():dateTime.hour;
+		var min=dateTime.minute<10?"0"+dateTime.minute.toString():dateTime.minute;
+		var s=dateTime.second<10?"0"+dateTime.second.toString():dateTime.second;
+		String key =
+				"${dateTime.year}-$m-$d $h:$min:$s";
+		return key;
 	}
 
 	/**
@@ -120,8 +133,8 @@ import 'package:encrypt_plugin_example/pay/alipay_config.dart';
    
 		if (isEncode) {
 			try {
-        //sb.write(Encoding.getByName("UTF-8").encode(value));
-				sb.write(value);
+        sb.write(Uri.encodeComponent(value));
+				//sb.write(value);
 			} catch (UnsupportedEncodingException) {
 				sb.write(value);
 			}
@@ -169,7 +182,7 @@ import 'package:encrypt_plugin_example/pay/alipay_config.dart';
 		// return "sign=" + encodedSign;
 	}
 
-  	 static String buildOrderParamAndSort(Map<String, String> map) {
+  	 static String buildOrderParamAndSort(Map<String, String> map,bool isEncode) {
 		List<String> keys = map.keys.toList();
 		// key排序
 	  keys.sort();
@@ -178,13 +191,13 @@ import 'package:encrypt_plugin_example/pay/alipay_config.dart';
 		for (int i = 0; i < keys.length - 1; i++) {
 			String key = keys[i];
 			String value = map[key];
-			authInfo.write(buildKeyValue(key, value, false));
+			authInfo.write(buildKeyValue(key, value, isEncode));
 			authInfo.write("&");
 		}
 
 		String tailKey = keys[keys.length - 1];
 		String tailValue = map[tailKey];
-		authInfo.write(buildKeyValue(tailKey, tailValue, false));
+		authInfo.write(buildKeyValue(tailKey, tailValue, isEncode));
 
     return authInfo.toString();
 

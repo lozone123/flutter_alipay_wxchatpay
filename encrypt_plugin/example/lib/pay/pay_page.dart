@@ -2,12 +2,14 @@
 import 'dart:math';
 
 import 'package:encrypt_plugin_example/pay/order_info_util.dart';
+import 'package:encrypt_plugin_example/pay/wxpay_config.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_alipay/flutter_alipay.dart';
-//import 'package:encrypt_plugin/encrypt_plugin.dart';
-
+import 'package:encrypt_plugin/encrypt_plugin.dart';
+import 'package:fluwx_pay_only/fluwx_pay_only.dart' as fluwx;
 import 'alipay_config.dart';
+import 'wx_pay.dart';
+
 
 class PayPage extends StatefulWidget {
   @override
@@ -51,7 +53,26 @@ class _PayPageState extends State<PayPage> {
                 ),
                 Center(
                   child: RaisedButton(
-                    onPressed: () {},
+                    onPressed: ()  async{
+  //获取prepayId
+                      var result = await WxPay.doPay(
+                          "beijing-shanghai-train", getOutTradeNo(), "100");
+                      //调起微信，完成支付
+                      fluwx
+                          .pay(
+                        appId: WxPayConfig.APPID,
+                        partnerId: WxPayConfig.mch_id,
+                        prepayId: result['prepayId'].toString(),
+                        packageValue: "Sign=WXPay",
+                        nonceStr: result['nonceStr'].toString(),
+                        timeStamp: int.parse(result['timeStamp']),
+                        sign: result['sign'].toString(),
+                      )
+                          .then((data) {
+                        print("---》$data");
+                      });
+
+},
                     child: Text("微信支付"),
                   ),
                 ),
